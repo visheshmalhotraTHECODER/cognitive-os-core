@@ -33,13 +33,23 @@ export default function Home() {
           ))}
         </div>
 
-        <a 
-          href="/dashboard"
-          className="px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-zinc-200 transition-colors tracking-wide flex items-center justify-center gap-2"
-        >
-          Initialize Engine
-          <span>→</span>
-        </a>
+        <div className="flex items-center justify-center gap-4">
+          <a 
+            href="/dashboard"
+            className="px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-zinc-200 transition-colors tracking-wide flex items-center justify-center gap-2"
+          >
+            Knowledge Graph Dashboard
+            <span>→</span>
+          </a>
+          
+          <a 
+            href="/simulator"
+            className="px-8 py-3 bg-zinc-800 text-white font-semibold rounded-full border border-zinc-700 hover:bg-zinc-700 transition-colors tracking-wide flex items-center justify-center gap-2"
+          >
+            Launch Observer Simulator
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse ml-2"></span>
+          </a>
+        </div>
 
       </main>
     </div>
