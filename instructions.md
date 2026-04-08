@@ -26,3 +26,10 @@ Feature development is blocked until the following primitives are verified:
 ## 5. UI/UX "Pro Max" Philosophy
 - The interface must reflect "Enterprise Intelligence". Use dark modes, fluid micro-interactions, and glassmorphism sparingly but effectively.
 - Animations must not block the main thread. Hardware-accelerated transforms only.
+
+## 6. Zero-Tolerance for Fake Persistence (The DB Rule)
+- RAM-based arrays (e.g. `let MOCK_DB = []`) are strictly banned for final feature merges. 
+- Any persistent state must be mapped through Prisma/Drizzle to an actual SQL/Relational engine. Features without proper schema migrations will be rejected.
+
+## 7. Physics-Based Intention (The Telemetry Rule)
+- The Observer SDK must not use basic timestamp subtractions. It must calculate multi-vector intent (Cursor Velocity, Path irregularity, precise viewport boundaries). If an event isn't backed by raw physical metrics, it is not "intent", it is just a click.

@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cognitive.OS (Core Architecture)
 
-## Getting Started
+> **WARNING to All Contributors:** This is a zero-trust, God-Tier Enterprise SaaS demonstration shell. We do not tolerate spaghetti code, "any" types, or unvalidated client mutations. Read `instructions.md` before committing.
 
-First, run the development server:
+## What is Cognitive.OS?
 
+Every organization runs on two operating systems:
+1. **The Official OS:** Documentation, SOPs, traditional algorithms.
+2. **The Real OS:** The cognitive intuition, heuristics, and overrides that senior experts execute when the "Official" process fails.
+
+Cognitive.OS captures **The Real OS**. It is a 3-layer architecture:
+- **Layer 1 (Observer SDK):** Physics-based intent telemetry (capturing hesitation, velocity, erratic paths).
+- **Layer 2 (Telemetry Extraction Engine):** Context isolation and Zod-verified heuristic generation.
+- **Layer 3 (Tacit Knowledge Graph):** Vectorized embedding of "intent rules" queryable by downstream AI Agents via Graph RAG.
+
+## Technical Primitives
+- Next.js 14 (Strict App Router / Server Components)
+- `zod` for zero-trust data payloads
+- `@xyflow/react` for complex rule orchestration
+- `framer-motion` for hardware-accelerated UI/UX
+- Prisma / PostgreSQL (pgvector compliant)
+
+## Onboarding
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Any code pushed mapping to `submitHeuristicNode` MUST pass through strict telemetry channels. Proceed with caution.
