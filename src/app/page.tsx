@@ -20,7 +20,7 @@ export default function Home() {
 
         <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-800 to-transparent my-10"></div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left mb-12">
           {[
             { title: "Observer SDK", desc: "Non-disruptive telemetry tracking intent over clicks." },
             { title: "Extraction Engine", desc: "Isolating decision contexts and surfacing heuristics." },
@@ -32,6 +32,14 @@ export default function Home() {
             </div>
           ))}
         </div>
+
+        <a 
+          href="/dashboard"
+          className="px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-zinc-200 transition-colors tracking-wide flex items-center justify-center gap-2"
+        >
+          Initialize Engine
+          <span>→</span>
+        </a>
 
       </main>
     </div>
