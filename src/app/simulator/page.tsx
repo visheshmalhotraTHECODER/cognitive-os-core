@@ -2,18 +2,17 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ObserverTracker } from '@/components/telemetry/ObserverTracker';
+import { ObserverTracker, TelemetryData } from '@/components/telemetry/ObserverTracker';
 import { submitHeuristicNode } from '@/app/actions';
 
 export default function SimulatorPage() {
   const [status, setStatus] = useState<'idle' | 'processing' | 'extracted'>('idle');
-  const [telemetry, setTelemetry] = useState<any>(null);
+  const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
 
-  const handleOverride = async (trackingData: any) => {
+  const handleOverride = async (trackingData: TelemetryData) => {
     setStatus('processing');
     setTelemetry(trackingData);
 
-    // Formulate the Heuristic Payload for Zod Validation
     const payload = {
       nodeId: crypto.randomUUID(),
       context: {
@@ -24,13 +23,12 @@ export default function SimulatorPage() {
       override: {
         actionId: crypto.randomUUID(),
         expertId: 'senior-analyst-alpha',
-        reasoningPayload: `Ignored AI Reject. Hesitated for ${trackingData.timeToDecisionMs}ms. Guarantor has A++ rating.`,
+        reasoningPayload: `Ignored AI: Hesitated for ${trackingData.timeToDecisionMs}ms. Velocity tracked at ${trackingData.avgVelocityPxPerSec} px/s. Guarantor has A++ rating.`,
         timestamp: new Date().toISOString(),
       },
       derivedRule: 'IF base_risk=high AND guarantor_rating=A++ THEN approve=true',
     };
 
-    // Push to Server Action
     const res = await submitHeuristicNode(payload);
     if (res.success) setStatus('extracted');
   };
@@ -57,7 +55,6 @@ export default function SimulatorPage() {
           </div>
         </div>
 
-        {/* Observer Restricted Zone */}
         <ObserverTracker onAction={handleOverride} className="p-6 border border-dashed border-zinc-700 bg-zinc-950 rounded-2xl relative">
           <h2 className="text-sm font-semibold mb-4 text-zinc-300">Expert Action Required</h2>
           <div className="flex gap-4">
@@ -68,16 +65,20 @@ export default function SimulatorPage() {
           </div>
         </ObserverTracker>
 
-        {/* Real-time Extraction Feedback */}
-        {status === 'extracted' && (
+        {status === 'extracted' && telemetry && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-8 p-4 bg-green-950/20 border border-green-900/50 rounded-xl">
             <h3 className="text-green-400 text-sm font-bold mb-2">Intent Captured & Codified</h3>
-            <div className="text-xs font-mono text-zinc-400 space-y-1">
-              <p>{`> Hesitation: ${telemetry.timeToDecisionMs}ms (Hovers: ${telemetry.hoverCount})`}</p>
-              <p>{`> Extracted Rule: IF base_risk=high AND guarantor_rating=A++ THEN approve=true`}</p>
-              <p>{`> Synced to Tacit Knowledge Graph.`}</p>
+            <div className="text-xs font-mono text-green-300/80 space-y-1 mb-3">
+              <p>[SDK] Time Delta: {telemetry.timeToDecisionMs}ms</p>
+              <p>[SDK] Distance Travelled: {telemetry.totalDistancePx} pixels</p>
+              <p>[SDK] Avg Velocity: {telemetry.avgVelocityPxPerSec} px/sec</p>
+              <p>[SDK] Erratic Indicator Score: {telemetry.erraticPathScore}</p>
             </div>
-            <a href="/dashboard" className="block mt-4 text-xs font-medium text-orange-400 hover:underline">View in Dashboard →</a>
+            <div className="text-xs font-mono text-zinc-400 space-y-1">
+              <p>{`> Extracted Rule: IF base_risk=high AND guarantor_rating=A++ THEN approve=true`}</p>
+              <p>{`> Status: Synced to SQLite Knowledge Graph.`}</p>
+            </div>
+            <a href="/dashboard" className="block mt-4 text-xs font-medium text-orange-400 hover:underline">View Database Vectors →</a>
           </motion.div>
         )}
       </motion.div>
