@@ -63,7 +63,7 @@ function buildGraphFromDb(records: DbNode[]): { nodes: Node[]; edges: Edge[] } {
       type: 'context',
       position: { x: cx, y: CONTEXT_Y },
       data: {
-        label: `Namespace: ${envId.split('-')[0]}-${envId.substring(0,4)}`,
+        label: `Domain Scope: Loan Approvals [${envId.substring(0,6).toUpperCase()}]`,
         details: JSON.stringify(groupedByEnv[envId][0].context.variables, null, 2),
       },
     });

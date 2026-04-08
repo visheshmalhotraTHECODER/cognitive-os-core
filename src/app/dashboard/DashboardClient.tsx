@@ -28,7 +28,7 @@ export function DashboardClient({ dbNodes }: { dbNodes: DbNode[] }) {
           <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-400 to-amber-200">
             Cognitive.OS
           </h2>
-          <p className="text-xs text-zinc-500 font-medium tracking-widest mt-1 uppercase">Tacit Query Engine</p>
+          <p className="text-xs text-zinc-500 font-medium tracking-widest mt-1 uppercase">Tacit Knowledge Graph</p>
         </div>
 
         <div className="space-y-6 flex-1">
