@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -13,66 +13,85 @@ import {
   EdgeChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { HeuristicNode } from './HeuristicNode';
+import { HeuristicNode as HeuristicNodeComponent } from './HeuristicNode';
 
-// Map custom nodes
-const nodeTypes = {
-  heuristic: HeuristicNode,
-};
+const nodeTypes = { heuristic: HeuristicNodeComponent };
 
-const initialNodes: Node[] = [
-  {
-    id: 'ctx-1',
-    type: 'heuristic',
-    position: { x: 250, y: 50 },
-    data: { label: 'Trading Spike Detected > 200%', isAnomaly: true, confidenceScore: 92 },
-  },
-  {
-    id: 'rule-1',
-    type: 'heuristic',
-    position: { x: 100, y: 250 },
-    data: { label: 'IF client_type = institutional THEN require_manual_review = false', isAnomaly: false },
-  },
-  {
-    id: 'rule-2',
-    type: 'heuristic',
-    position: { x: 400, y: 250 },
-    data: { label: 'IF client_type = retail THEN trigger_fraud_alert = true', isAnomaly: false },
-  }
-];
+interface DbNode {
+  nodeId: string;
+  context: { environmentId: string; variables: Record<string, unknown>; confidenceScore?: number | null };
+  override: { expertId: string; reasoningPayload: string; timestamp: string; actionId: string };
+  derivedRule: string;
+}
 
-const initialEdges: Edge[] = [
-  { id: 'e1-2', source: 'ctx-1', target: 'rule-1', animated: true, style: { stroke: '#fb923c' } },
-  { id: 'e1-3', source: 'ctx-1', target: 'rule-2', animated: true, style: { stroke: '#ef4444' } },
-];
+function buildGraphFromDb(records: DbNode[]): { nodes: Node[]; edges: Edge[] } {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+  const COLS = 3;
+  const X_GAP = 350;
+  const Y_GAP = 220;
 
-export function KnowledgeGraph() {
+  records.forEach((rec, i) => {
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+
+    nodes.push({
+      id: rec.nodeId,
+      type: 'heuristic',
+      position: { x: col * X_GAP + 80, y: row * Y_GAP + 50 },
+      data: {
+        label: rec.derivedRule,
+        confidenceScore: rec.context.confidenceScore ?? undefined,
+        isAnomaly: false,
+      },
+    });
+
+    // Chain each node to the previous one sequentially
+    if (i > 0) {
+      edges.push({
+        id: `e-${i}`,
+        source: records[i - 1].nodeId,
+        target: rec.nodeId,
+        animated: true,
+        style: { stroke: '#fb923c', strokeWidth: 1.5 },
+      });
+    }
+  });
+
+  return { nodes, edges };
+}
+
+interface KnowledgeGraphProps {
+  dbNodes: DbNode[];
+}
+
+export function KnowledgeGraph({ dbNodes }: KnowledgeGraphProps) {
+  const { nodes: initialNodes, edges: initialEdges } = buildGraphFromDb(dbNodes);
+
   const [nodes, setNodes] = useState<Node[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
 
+  useEffect(() => {
+    const { nodes: n, edges: e } = buildGraphFromDb(dbNodes);
+    setNodes(n);
+    setEdges(e);
+  }, [dbNodes]);
+
   const onNodesChange = useCallback(
-    (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    []
+    (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)), []
   );
-  
   const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    []
+    (changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds)), []
   );
 
   return (
     <div style={{ width: '100%', height: '100%' }} className="bg-black">
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        nodeTypes={nodeTypes}
-        fitView
-        colorMode="dark"
-        className="touch-none"
+        nodes={nodes} edges={edges}
+        onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes} fitView colorMode="dark" className="touch-none"
       >
-        <Background color="#333" gap={24} />
+        <Background color="#222" gap={28} />
         <Controls className="bg-zinc-900 border-zinc-800 fill-zinc-400" />
       </ReactFlow>
     </div>
