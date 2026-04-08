@@ -23,6 +23,7 @@ model HeuristicNode {
   overrideTime    String
 
   derivedRule     String
+  vectorData      String?
 
   createdAt       DateTime @default(now())
 }

@@ -3,6 +3,7 @@
 import { HeuristicNodeSchema } from '@/lib/schemas';
 import { logIntent, logError } from '@/lib/telemetry';
 import { prisma } from '@/lib/prisma';
+import { getEmbedding } from '@/lib/vectors';
 
 /**
  * Server Action: Fetch the Graph from Database
@@ -44,13 +45,16 @@ export async function submitHeuristicNode(formData: unknown) {
     // 1. Zod Validation (Zero-trust)
     const validNode = HeuristicNodeSchema.parse(formData);
 
-    // 2. Telemetry extraction
+    // 2. Vector Intelligence Engine Activation
+    const embedding = await getEmbedding(validNode.derivedRule);
+
+    // 3. Telemetry extraction
     logIntent({
-      message: 'New heuristic codified by expert',
+      message: 'New heuristic codified and vectorized',
       context: { expertId: validNode.override.expertId, rule: validNode.derivedRule }
     });
 
-    // 3. Database mutation (Real Persistence)
+    // 4. Database mutation (Real Persistence + Vector)
     await prisma.heuristicNode.create({
       data: {
         nodeId: validNode.nodeId,
@@ -62,6 +66,7 @@ export async function submitHeuristicNode(formData: unknown) {
         reasoning: validNode.override.reasoningPayload,
         overrideTime: validNode.override.timestamp,
         derivedRule: validNode.derivedRule,
+        vectorData: JSON.stringify(embedding),
       }
     });
 
