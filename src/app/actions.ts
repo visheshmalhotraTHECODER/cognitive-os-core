@@ -1,47 +1,43 @@
 'use server'; // Enforces that these functions ONLY run on the server
 
-import { HeuristicNode, HeuristicNodeSchema } from '@/lib/schemas';
+import { HeuristicNodeSchema } from '@/lib/schemas';
 import { logIntent, logError } from '@/lib/telemetry';
+import { prisma } from '@/lib/prisma';
 
 /**
- * Mock Database for the Demonstration Shell
- * In a real production environment, this would hook into PostgreSQL (pgvector) or Neo4j.
- */
-let MOCK_KNOWLEDGE_GRAPH: HeuristicNode[] = [
-  {
-    nodeId: 'bba32-4211-1234',
-    context: {
-      environmentId: 'env-prod-1',
-      variables: { anomaly_detected: 'trading_spike_200%', user_risk_profile: 'low' },
-      confidenceScore: 92,
-    },
-    override: {
-      actionId: 'act-999',
-      expertId: 'senior-underwriter-01',
-      reasoningPayload: 'Ignored trading spike because institutional client pre-notified.',
-      timestamp: new Date().toISOString(),
-    },
-    derivedRule: 'IF anomaly=trading_spike AND client_type=institutional THEN require_manual_review=false',
-  }
-];
-
-/**
- * Server Action: Fetch the Graph
- * Proves that we fetch data securely on the server before sending to client.
+ * Server Action: Fetch the Graph from Database
+ * Returns actual persisted nodes in the required structure.
  */
 export async function getTacitKnowledgeGraph() {
-  // Simulate network latency
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  return {
-    success: true,
-    data: MOCK_KNOWLEDGE_GRAPH,
-  };
+  try {
+    const records = await prisma.heuristicNode.findMany();
+    
+    // Map SQLite flat records back to strict App Interface
+    const data = records.map((r) => ({
+      nodeId: r.nodeId,
+      context: {
+        environmentId: r.environmentId,
+        variables: JSON.parse(r.variablesData),
+        confidenceScore: r.confidenceScore,
+      },
+      override: {
+        actionId: r.actionId,
+        expertId: r.expertId,
+        reasoningPayload: r.reasoning,
+        timestamp: r.overrideTime,
+      },
+      derivedRule: r.derivedRule,
+    }));
+
+    return { success: true, data };
+  } catch (err: any) {
+    return { success: false, data: [] };
+  }
 }
 
 /**
- * Server Action: Submit a new Heuristic
- * Validates with Zod, logs intent, and updates the db.
+ * Server Action: Submit a new Heuristic to Database
+ * Validates with Zod, logs intent, and writes to SQLite.
  */
 export async function submitHeuristicNode(formData: unknown) {
   try {
@@ -54,17 +50,29 @@ export async function submitHeuristicNode(formData: unknown) {
       context: { expertId: validNode.override.expertId, rule: validNode.derivedRule }
     });
 
-    // 3. Database mutation
-    MOCK_KNOWLEDGE_GRAPH.push(validNode);
+    // 3. Database mutation (Real Persistence)
+    await prisma.heuristicNode.create({
+      data: {
+        nodeId: validNode.nodeId,
+        environmentId: validNode.context.environmentId,
+        variablesData: JSON.stringify(validNode.context.variables),
+        confidenceScore: validNode.context.confidenceScore,
+        actionId: validNode.override.actionId,
+        expertId: validNode.override.expertId,
+        reasoning: validNode.override.reasoningPayload,
+        overrideTime: validNode.override.timestamp,
+        derivedRule: validNode.derivedRule,
+      }
+    });
 
     return { success: true, node: validNode };
 
   } catch (error: any) {
     // Graceful degradation and logging
     logError({
-      message: 'Failed to codify heuristic due to validation error',
+      message: 'Failed to codify heuristic due to validation or DB error',
       level: 'WARN',
-      digest: 'ZOD_VALIDATION_ERROR'
+      digest: 'ZOD_DB_ERROR'
     });
     
     return { success: false, error: error.message };

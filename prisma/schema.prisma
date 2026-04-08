@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model HeuristicNode {
+  id              String   @id @default(uuid())
+  nodeId          String   @unique
+  
+  // Context Model mapped flatly for SQLite simple handling
+  environmentId   String
+  variablesData   String   // Storing JSON stringified map
+  confidenceScore Float?
+
+  // Override Model mapped flatly
+  actionId        String
+  expertId        String
+  reasoning       String
+  overrideTime    String
+
+  derivedRule     String
+
+  createdAt       DateTime @default(now())
+}
