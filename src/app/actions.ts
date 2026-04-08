@@ -74,7 +74,12 @@ export async function submitHeuristicNode(formData: unknown) {
       level: 'WARN',
       digest: 'ZOD_DB_ERROR'
     });
+
+    if (error.errors) {
+      // It's a ZodError, serialize explicitly
+      return { success: false, error: JSON.stringify(error.errors) };
+    }
     
-    return { success: false, error: error.message };
+    return { success: false, error: error?.message || "Unknown Server Error" };
   }
 }
