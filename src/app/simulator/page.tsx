@@ -7,8 +7,9 @@ import { submitHeuristicNode } from '@/app/actions';
 
 export default function SimulatorPage() {
   const trackerRef = useRef<ObserverTrackerHandle>(null);
-  const [status, setStatus] = useState<'idle' | 'processing' | 'extracted'>('idle');
+  const [status, setStatus] = useState<'idle' | 'processing' | 'extracted' | 'error'>('idle');
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string>('');
 
   const handleOverride = async (trackingData: TelemetryData) => {
     setStatus('processing');
@@ -16,7 +17,7 @@ export default function SimulatorPage() {
     const payload = {
       nodeId: crypto.randomUUID(),
       context: {
-        environmentId: 'sim-env-001',
+        environmentId: crypto.randomUUID(), // Zod needs a real UUID here!
         variables: { incoming_loan: '$500k', age: '19', risk_model: 'HIGH_RISK_REJECT' },
         confidenceScore: 12,
       },
@@ -29,7 +30,13 @@ export default function SimulatorPage() {
       derivedRule: 'IF base_risk=high AND guarantor_rating=A++ THEN approve=true',
     };
     const res = await submitHeuristicNode(payload);
-    if (res.success) setStatus('extracted');
+    if (res.success) {
+      setStatus('extracted');
+    } else {
+      console.error("Zod Validation Failed:", res.error);
+      setErrorMsg(typeof res.error === 'string' ? res.error : JSON.stringify(res.error));
+      setStatus('error');
+    }
   };
 
   return (
@@ -85,6 +92,14 @@ export default function SimulatorPage() {
               <p>{`> Status: Synced to SQLite Knowledge Graph`}</p>
             </div>
             <a href="/dashboard" className="block mt-4 text-xs font-medium text-orange-400 hover:underline">View Database Vectors →</a>
+          </motion.div>
+        )}
+
+        {status === 'error' && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-8 p-4 bg-red-950/20 border border-red-900/50 rounded-xl overflow-hidden">
+            <h3 className="text-red-400 text-sm font-bold mb-2">Intent Extraction Failed ❌</h3>
+            <p className="text-xs font-mono text-red-300/80 mb-3">{errorMsg}</p>
+            <button onClick={() => setStatus('idle')} className="text-xs font-medium text-orange-400 hover:underline flex items-center gap-1">Try Again →</button>
           </motion.div>
         )}
       </motion.div>
